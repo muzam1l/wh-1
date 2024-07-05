@@ -1,6 +1,7 @@
 from pathlib import Path
 import fiftyone as fo
 import fiftyone.brain as fob
+from fiftyone.brain.similarity import DuplicatesMixin
 from pytube import YouTube
 from pytube.innertube import _default_clients
 import shutil
@@ -11,10 +12,9 @@ _default_clients["ANDROID_MUSIC"] = _default_clients["ANDROID_CREATOR"]
 OUTPUT_PATH = "downloaded/"
 LIMIT = 12
 FPS = 1
-VISUALIZE = True  # disable for prod
 
 
-def main(url: str):
+def extract_images(url: str, visualize=False):
     download_video(url)
 
     dataset = fo.Dataset.from_videos_dir(OUTPUT_PATH)
@@ -22,7 +22,7 @@ def main(url: str):
     # take FPS frames/sec
     frame_view = dataset.to_frames(sample_frames=True, fps=FPS)
 
-    results = fob.compute_similarity(frame_view, brain_key="frame_sim")
+    results: DuplicatesMixin = fob.compute_similarity(frame_view, brain_key="frame_sim")
 
     # Find maximally unique frames
     results.find_unique(LIMIT)
@@ -34,9 +34,9 @@ def main(url: str):
     for sample in unique_view:
         shutil.copy(sample.filepath, result_path)
 
-    print("Done, results saved in", result_path.absolute())
+    print("Done! results saved at", result_path.absolute())
     # visualization
-    if VISUALIZE:
+    if visualize:
         session = fo.launch_app(unique_view)  # type: ignore
         session.wait()
 
@@ -101,4 +101,4 @@ if __name__ == "__main__":
     # url = "https://www.youtube.com/shorts/vuWE3ArKHUg"  # 10 dresses
     url = "https://wishlinkcdn.azureedge.net/creator-media-videos/media_0_zuola_p465472_5c5c8776-5744-495a-976c-0fcca278115f.mp4"  # cdn
 
-    main(url)
+    extract_images(url, visualize=True)

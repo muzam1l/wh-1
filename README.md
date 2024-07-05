@@ -1,1 +1,2 @@
-`poetry install` to install deps
+- `poetry install` to install deps.
+- `fastapi [run|dev] app/main.py` to run the [dev|prod] server.
