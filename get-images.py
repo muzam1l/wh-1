@@ -1,7 +1,6 @@
 from pathlib import Path
 import fiftyone as fo
 import fiftyone.brain as fob
-from fiftyone import ViewField as F
 from pytube import YouTube
 from pytube.innertube import _default_clients
 import shutil
@@ -12,6 +11,7 @@ _default_clients["ANDROID_MUSIC"] = _default_clients["ANDROID_CREATOR"]
 OUTPUT_PATH = "downloaded/"
 LIMIT = 12
 FPS = 1
+VISUALIZE = True  # disable for prod
 
 
 def main(url: str):
@@ -29,14 +29,16 @@ def main(url: str):
     unique_view = frame_view.select(results.unique_ids)
 
     # Copy unique frames to another folder
-    result_path = OUTPUT_PATH + "result/"
+    result_path = Path(OUTPUT_PATH, "result/")
     ensure_dir(result_path)
     for sample in unique_view:
         shutil.copy(sample.filepath, result_path)
 
+    print("Done, results saved in", result_path.absolute())
     # visualization
-    session = fo.launch_app(unique_view)  # type: ignore
-    session.wait()
+    if VISUALIZE:
+        session = fo.launch_app(unique_view)  # type: ignore
+        session.wait()
 
 
 def download_video(url: str):
@@ -52,7 +54,7 @@ def download_video(url: str):
 def download_url_video(url: str):
     try:
         path = OUTPUT_PATH + "video.mp4"
-        ensure_dir(OUTPUT_PATH)
+        ensure_dir(Path(OUTPUT_PATH))
 
         http = urllib3.PoolManager()
         r = http.request("GET", url, preload_content=False)
@@ -87,8 +89,8 @@ def download_youtube_video(url: str):
         raise e
 
 
-def ensure_dir(path: str):
-    Path(path).mkdir(parents=True, exist_ok=True)
+def ensure_dir(path: Path):
+    path.mkdir(parents=True, exist_ok=True)
 
 
 if __name__ == "__main__":
