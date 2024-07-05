@@ -19,7 +19,7 @@ def main(url: str):
 
     dataset = fo.Dataset.from_videos_dir(OUTPUT_PATH)
 
-    # take 1 frame/sec
+    # take FPS frames/sec
     frame_view = dataset.to_frames(sample_frames=True, fps=FPS)
 
     results = fob.compute_similarity(frame_view, brain_key="frame_sim")
@@ -27,6 +27,12 @@ def main(url: str):
     # Find maximally unique frames
     results.find_unique(LIMIT)
     unique_view = frame_view.select(results.unique_ids)
+
+    # Copy unique frames to another folder
+    result_path = OUTPUT_PATH + "result/"
+    ensure_dir(result_path)
+    for sample in unique_view:
+        shutil.copy(sample.filepath, result_path)
 
     # visualization
     session = fo.launch_app(unique_view)  # type: ignore
@@ -46,7 +52,7 @@ def download_video(url: str):
 def download_url_video(url: str):
     try:
         path = OUTPUT_PATH + "video.mp4"
-        Path(OUTPUT_PATH).mkdir(parents=True, exist_ok=True)
+        ensure_dir(OUTPUT_PATH)
 
         http = urllib3.PoolManager()
         r = http.request("GET", url, preload_content=False)
@@ -79,6 +85,10 @@ def download_youtube_video(url: str):
     except Exception as e:
         print("Error downloading video")
         raise e
+
+
+def ensure_dir(path: str):
+    Path(path).mkdir(parents=True, exist_ok=True)
 
 
 if __name__ == "__main__":
