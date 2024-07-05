@@ -1,9 +1,11 @@
+from pathlib import Path
 import fiftyone as fo
 import fiftyone.brain as fob
 from fiftyone import ViewField as F
 from pytube import YouTube
 from pytube.innertube import _default_clients
 import shutil
+import urllib3
 
 _default_clients["ANDROID_MUSIC"] = _default_clients["ANDROID_CREATOR"]
 
@@ -12,8 +14,8 @@ LIMIT = 12
 FPS = 1
 
 
-def main():
-    download_video()
+def main(url: str):
+    download_video(url)
 
     dataset = fo.Dataset.from_videos_dir(OUTPUT_PATH)
 
@@ -31,14 +33,39 @@ def main():
     session.wait()
 
 
-def download_video():
-    try:
+def download_video(url: str):
+    shutil.rmtree(OUTPUT_PATH, ignore_errors=True)
 
-        # url = "https://www.youtube.com/shorts/zsafugt9BeQ"  # few unique frames
-        # url = "https://www.youtube.com/shorts/ZbFJ6z4LZJc" # similar frames
-        url = "https://www.youtube.com/shorts/vuWE3ArKHUg"  # 10 dresses
-        # url = "https://www.youtube.com/shorts/YHXtu7WSc08"
-        # url = "https://www.youtube.com/watch?v=22tVWwmTie8"  # houdini
+    is_youtube = "youtube.com" in url or "youtu.be" in url
+    if is_youtube:
+        download_youtube_video(url)
+    else:
+        download_url_video(url)
+
+
+def download_url_video(url: str):
+    try:
+        path = OUTPUT_PATH + "video.mp4"
+        Path(OUTPUT_PATH).mkdir(parents=True, exist_ok=True)
+
+        http = urllib3.PoolManager()
+        r = http.request("GET", url, preload_content=False)
+        chunk_size = 1024 * 1024
+        with open(path, "wb+") as out:
+            while True:
+                data = r.read(chunk_size)
+                if not data:
+                    break
+                out.write(data)
+
+        r.release_conn()
+    except Exception as e:
+        print("Error downloading video")
+        raise e
+
+
+def download_youtube_video(url: str):
+    try:
         yt = YouTube(url)
         stream = yt.streams.filter(only_video=True).get_by_resolution("720p")
 
@@ -48,7 +75,6 @@ def download_video():
         if stream is None:
             raise ValueError("No stream found")
 
-        shutil.rmtree(OUTPUT_PATH, ignore_errors=True)
         stream.download(output_path=OUTPUT_PATH)
     except Exception as e:
         print("Error downloading video")
@@ -56,4 +82,11 @@ def download_video():
 
 
 if __name__ == "__main__":
-    main()
+    # url = "https://www.youtube.com/shorts/zsafugt9BeQ"  # few unique frames
+    # url = "https://www.youtube.com/shorts/ZbFJ6z4LZJc" # similar frames
+    # url = "https://www.youtube.com/shorts/YHXtu7WSc08"
+    # url = "https://www.youtube.com/watch?v=22tVWwmTie8"  # houdini
+    # url = "https://www.youtube.com/shorts/vuWE3ArKHUg"  # 10 dresses
+    url = "https://wishlinkcdn.azureedge.net/creator-media-videos/media_0_zuola_p465472_5c5c8776-5744-495a-976c-0fcca278115f.mp4"  # cdn
+
+    main(url)
