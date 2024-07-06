@@ -52,6 +52,6 @@ def upload_file(prefix: str, file_path: str):
             print(f"File upload successful for {file_path}")
         else:
             print(
-                f"Error: Unable to upload file. Status Code: {res.status}: {res.data.decode("utf-8")}"
+                f"Error: Unable to upload file. Status Code: {res.status}: {res.data.decode('utf-8')}"
             )
 

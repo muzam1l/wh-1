@@ -1,15 +1,23 @@
-from typing import Annotated, Literal
-from fastapi import Body, Depends, FastAPI, HTTPException
+import os
+import shutil
+from typing import Literal
+
+from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 
+from lib.google_vision import get_recommended_products_from_image
+from lib.save_image import save_image_from_cdn
 from . import crud, models, schemas
 from .db import SessionLocal, engine
-from . import crud, models, schemas
 from ..lib.extractor import extract_images
 
 models.Base.metadata.create_all(bind=engine)
+from pathlib import Path
 
 app = FastAPI()
+OUTPUT_PATH = "downloaded"
+OUTPUT_PATH_RESULT = "downloaded/result"
+OUTPUT = Path(__file__).parent.parent / OUTPUT_PATH_RESULT
 
 
 # Dependency
@@ -44,11 +52,26 @@ def create_recommended_products(
         if media_type == "VIDEO":
             url = media_urls[0]
             extract_images(url)
+        elif media_type == "IMAGE":
+            # Fetch directly
+            for media_url in media_urls:
+                save_image_from_cdn(media_url)
 
-            # = use images in /result
-        else:
-            pass
-            # use media_urls directly
+        if not OUTPUT.exists() or not OUTPUT.is_dir():
+            raise HTTPException(status_code=404, detail="Directory not found")
+
+        results = []
+
+        for file_path in OUTPUT.iterdir():
+            if file_path.is_file():
+                with open(file_path, 'r') as file:
+                    content = file.read()
+                    results.extend(get_recommended_products_from_image(content))
+
+        sorted_results = sorted(results, key=lambda x: x['score'], reverse=True)
+        for result in sorted_results:
+            print('Product ID: {}'.format(result.product.name))
+            print('Score: {}'.format(result.score))
 
         return "Success"
     except Exception as e:

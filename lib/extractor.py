@@ -7,9 +7,10 @@ from pytube.innertube import _default_clients
 import shutil
 import urllib3
 
+from app.main import OUTPUT_PATH
+
 _default_clients["ANDROID_MUSIC"] = _default_clients["ANDROID_CREATOR"]
 
-OUTPUT_PATH = "downloaded/"
 LIMIT = 12
 FPS = 1
 
