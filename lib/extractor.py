@@ -7,18 +7,16 @@ from pytube.innertube import _default_clients
 import shutil
 import urllib3
 
-from app.main import OUTPUT_PATH
-
 _default_clients["ANDROID_MUSIC"] = _default_clients["ANDROID_CREATOR"]
 
 LIMIT = 12
 FPS = 1
 
 
-def extract_images(url: str, visualize=False):
-    download_video(url)
+def extract_images(url: str, output_path: str, visualize=False):
+    download_video(url, output_path)
 
-    dataset = fo.Dataset.from_videos_dir(OUTPUT_PATH)
+    dataset = fo.Dataset.from_videos_dir(output_path)
 
     # take FPS frames/sec
     frame_view = dataset.to_frames(sample_frames=True, fps=FPS)
@@ -30,7 +28,7 @@ def extract_images(url: str, visualize=False):
     unique_view = frame_view.select(results.unique_ids)
 
     # Copy unique frames to another folder
-    result_path = Path(OUTPUT_PATH, "result/")
+    result_path = Path(output_path, "result")
     ensure_dir(result_path)
     for sample in unique_view:
         shutil.copy(sample.filepath, result_path)
@@ -42,20 +40,20 @@ def extract_images(url: str, visualize=False):
         session.wait()
 
 
-def download_video(url: str):
-    shutil.rmtree(OUTPUT_PATH, ignore_errors=True)
+def download_video(url: str, output_path: str):
+    shutil.rmtree(output_path, ignore_errors=True)
 
     is_youtube = "youtube.com" in url or "youtu.be" in url
     if is_youtube:
-        download_youtube_video(url)
+        download_youtube_video(url, output_path)
     else:
-        download_url_video(url)
+        download_url_video(url, output_path)
 
 
-def download_url_video(url: str):
+def download_url_video(url: str, output_path: str):
     try:
-        path = OUTPUT_PATH + "video.mp4"
-        ensure_dir(Path(OUTPUT_PATH))
+        ensure_dir(Path(output_path))
+        path = Path(output_path, "video.mp4")
 
         http = urllib3.PoolManager()
         r = http.request("GET", url, preload_content=False)
@@ -73,7 +71,7 @@ def download_url_video(url: str):
         raise e
 
 
-def download_youtube_video(url: str):
+def download_youtube_video(url: str, output_path: str):
     try:
         yt = YouTube(url)
         stream = yt.streams.filter(only_video=True).get_by_resolution("720p")
@@ -84,7 +82,7 @@ def download_youtube_video(url: str):
         if stream is None:
             raise ValueError("No stream found")
 
-        stream.download(output_path=OUTPUT_PATH)
+        stream.download(output_path=output_path)
     except Exception as e:
         print("Error downloading video")
         raise e
@@ -102,4 +100,4 @@ if __name__ == "__main__":
     # url = "https://www.youtube.com/shorts/vuWE3ArKHUg"  # 10 dresses
     url = "https://wishlinkcdn.azureedge.net/creator-media-videos/media_0_zuola_p465472_5c5c8776-5744-495a-976c-0fcca278115f.mp4"  # cdn
 
-    extract_images(url, visualize=True)
+    extract_images(url, output_path="downloaded/", visualize=True)
