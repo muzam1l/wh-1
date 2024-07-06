@@ -49,6 +49,14 @@ def create_recommended_products(
     db: Session = Depends(get_db),
 ):
     results = []
+    exists = (
+        db.query(models.ProductRecommendations).filter_by(media_id=media_id).exists()
+    )
+
+    val = db.query(exists).scalar()
+    if val:
+        return "Skipping"
+
     try:
         if media_type == "VIDEO":
             url = media_urls[0]
@@ -71,14 +79,22 @@ def create_recommended_products(
         sorted_results = sorted(results, key=lambda x: x.score, reverse=True)
 
         for result in sorted_results:
-            id = result.product.name.split("/")[-1]
+            product_id = result.product.name.split("/")[-1]
             score = result.score
 
             print(f"Product ID: {id}")
             print(f"Score: {score}")
-            db.add(models.ProductRecommendations(id=id, media_id=media_id, score=score))
+            db.add(
+                models.ProductRecommendations(
+                    product_id=product_id, media_id=media_id, score=score
+                )
+            )
 
-        db.commit()
+        try:
+            db.commit()
+        except Exception as e:
+            print(f"Error committing to DB, {e}")
+            raise e
         return "Success"
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
