@@ -70,7 +70,7 @@ def create_recommended_products(
         sorted_results = sorted(results, key=lambda x: x.score, reverse=True)
 
         for result in sorted_results:
-            id = result.product.name.split("/")[-1])
+            id = result.product.name.split("/")[-1]
             print(f"Product ID: {id}")
             print("Score: {}".format(result.score))
 
