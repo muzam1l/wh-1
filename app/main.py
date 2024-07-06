@@ -10,6 +10,7 @@ from lib.save_image import save_image_from_cdn
 from . import crud, models, schemas
 from .db import SessionLocal, engine
 from ..lib.extractor import extract_images
+import requests
 
 models.Base.metadata.create_all(bind=engine)
 from pathlib import Path
@@ -48,26 +49,28 @@ def create_recommended_products(
     media_type: Literal["IMAGE", "VIDEO", "CAROUSEL_ALBUM"],
     db: Session = Depends(get_db),
 ):
+    if not OUTPUT.exists() or not OUTPUT.is_dir():
+        print("No results found")
+        return
+
+    results = []
     try:
         if media_type == "VIDEO":
             url = media_urls[0]
             extract_images(url)
-        elif media_type == "IMAGE":
+
+            for file_path in OUTPUT.iterdir():
+                if file_path.is_file():
+                    with open(file_path, 'r') as file:
+                        content = file.read()
+                        results.extend(get_recommended_products_from_image(content))
+
+        else:
             # Fetch directly
             for media_url in media_urls:
-                save_image_from_cdn(media_url)
-
-        if not OUTPUT.exists() or not OUTPUT.is_dir():
-            print("No results found")
-            return
-
-        results = []
-
-        for file_path in OUTPUT.iterdir():
-            if file_path.is_file():
-                with open(file_path, 'r') as file:
-                    content = file.read()
-                    results.extend(get_recommended_products_from_image(content))
+                response = requests.get(media_url)
+                content = response.content
+                results.extend(get_recommended_products_from_image(content))
 
         sorted_results = sorted(results, key=lambda x: x['score'], reverse=True)
         for result in sorted_results:
