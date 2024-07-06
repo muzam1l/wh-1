@@ -1,5 +1,5 @@
 from pydantic import BaseModel
 
 
-class Ids(BaseModel):
-    ids: list[int]
+class StrIds(BaseModel):
+    ids: list[str]

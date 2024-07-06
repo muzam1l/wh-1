@@ -26,7 +26,7 @@ def read_root():
     return "pong"
 
 
-@app.get("/get_recommended_products/{media_id}", response_model=schemas.Ids)
+@app.get("/get_recommended_products/{media_id}", response_model=schemas.StrIds)
 def get_recommended_products(media_id: int, db: Session = Depends(get_db)):
     ids = crud.get_recommended_product_ids(db, media_id)
 
