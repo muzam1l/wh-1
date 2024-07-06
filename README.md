@@ -1,4 +1,4 @@
 - Install [poetry](https://python-poetry.org/docs/#installing-with-pipx).
-- Activate the [virtual environment](https://python-poetry.org/docs/basic-usage/#activating-the-virtual-environment)
 - Install dependencies: `poetry install`.
+- Activate the [virtual environment](https://python-poetry.org/docs/basic-usage/#activating-the-virtual-environment)
 - Run the server: `fastapi [run|dev] app/main.py`. `run` for production, `dev` for development.
