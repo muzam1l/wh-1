@@ -34,7 +34,7 @@ def read_root():
 
 
 @app.get("/get_recommended_products/{media_id}", response_model=schemas.StrIds)
-def get_recommended_products(media_id: int, db: Session = Depends(get_db)):
+def get_recommended_products(media_id: str, db: Session = Depends(get_db)):
     ids = crud.get_recommended_product_ids(db, media_id)
 
     return {"ids": ids}
@@ -42,7 +42,7 @@ def get_recommended_products(media_id: int, db: Session = Depends(get_db)):
 
 @app.post("/create_recommended_products", response_model=None)
 def create_recommended_products(
-    media_id: int, # convert to string
+    media_id: str,
     media_urls: list[str],
     media_type: Literal["VIDEO", "IMAGES"],
     db: Session = Depends(get_db),
