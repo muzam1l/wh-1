@@ -44,7 +44,7 @@ def get_recommended_products(media_id: int, db: Session = Depends(get_db)):
 def create_recommended_products(
     media_id: int, # convert to string
     media_urls: list[str],
-    media_type: Literal["IMAGE", "VIDEO", "CAROUSEL_ALBUM"],
+    media_type: Literal["VIDEO", "IMAGES"],
     db: Session = Depends(get_db),
 ):
     results = []
