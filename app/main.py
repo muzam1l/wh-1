@@ -35,7 +35,8 @@ def read_root():
 
 @app.get("/get_recommended_products/{media_id}", response_model=schemas.StrIds)
 def get_recommended_products(media_id: str, db: Session = Depends(get_db)):
-    ids = crud.get_recommended_product_ids(db, media_id)
+    ids_query = crud.get_recommended_product_ids(db, media_id)
+    ids = [id[0] for id in ids_query]
 
     return {"ids": ids}
 
@@ -71,9 +72,13 @@ def create_recommended_products(
 
         for result in sorted_results:
             id = result.product.name.split("/")[-1]
-            print(f"Product ID: {id}")
-            print("Score: {}".format(result.score))
+            score = result.score
 
+            print(f"Product ID: {id}")
+            print(f"Score: {score}")
+            db.add(models.ProductRecommendations(id=id, media_id=media_id, score=score))
+
+        db.commit()
         return "Success"
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
