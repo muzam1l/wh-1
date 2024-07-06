@@ -58,7 +58,8 @@ def create_recommended_products(
                 save_image_from_cdn(media_url)
 
         if not OUTPUT.exists() or not OUTPUT.is_dir():
-            raise HTTPException(status_code=404, detail="Directory not found")
+            print("No results found")
+            return
 
         results = []
 
