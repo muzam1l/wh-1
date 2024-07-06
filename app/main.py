@@ -3,6 +3,7 @@ from typing import Literal
 from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 import requests
+from fastapi.middleware.cors import CORSMiddleware
 
 from ..lib.google_vision import get_recommended_products_from_image
 from . import crud, models, schemas
@@ -13,6 +14,14 @@ models.Base.metadata.create_all(bind=engine)
 from pathlib import Path
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 OUTPUT_PATH = "downloaded"
 OUTPUT_PATH_RESULT = "downloaded/result"
@@ -33,7 +42,7 @@ def read_root():
     return "pong"
 
 
-@app.get("/get_recommended_products/{media_id}", response_model=schemas.StrIds)
+@app.get("/get_recommended_products", response_model=schemas.StrIds)
 def get_recommended_products(media_id: str, db: Session = Depends(get_db)):
     ids_query = crud.get_recommended_product_ids(db, media_id)
     ids = [id[0] for id in ids_query]
