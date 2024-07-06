@@ -1,2 +1,4 @@
-- `poetry install` to install deps.
-- `fastapi [run|dev] app/main.py` to run the [dev|prod] server.
+- Install [poetry](https://python-poetry.org/docs/#installing-with-pipx).
+- Activate the [virtual environment](https://python-poetry.org/docs/basic-usage/#activating-the-virtual-environment)
+- Install dependencies: `poetry install`.
+- Run the server: `fastapi [run|dev] app/main.py`. `run` for production, `dev` for development.
